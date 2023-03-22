@@ -49,8 +49,7 @@ namespace HttpContextCatcher.Extension.Bsons
                 Time = contextCatcher.Time,
                 Request = ConvertRequest(contextCatcher.Request),
                 Response = ConvertResponse(contextCatcher.Response),
-                Exception = contextCatcher.Exception,
-                Item = ConvertItem(contextCatcher.Items)
+                Exception = contextCatcher.Exception
             };
         }
 
@@ -75,19 +74,6 @@ namespace HttpContextCatcher.Extension.Bsons
                 Body = response.Body.ToPrettyBson(),
                 ResSecond = response.ResSecond,
                 StatusCode = response.StatusCode
-            };
-        }
-
-        private static ItemBson ConvertItem(ItemCatcher items)
-        {
-            if(items == null) return default;
-            return new ItemBson
-            {
-                Items = (items == null) ?
-                            null :
-                            items.Items.ToDictionary(keyValue => keyValue.Key,
-                                                     keyValue => keyValue.Value.ToPrettyBson())
-
             };
         }
     }
