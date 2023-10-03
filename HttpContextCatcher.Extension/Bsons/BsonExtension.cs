@@ -1,47 +1,19 @@
 ﻿using MongoDB.Bson;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Linq;
+using MongoDB.Bson.Serialization;
 
 namespace HttpContextCatcher.Extension.Bsons
 {
     public static class BsonExtension
     {
-        private static BsonValue ToPrettyBson(this string jsonString)
-        {
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                return BsonNull.Value;
-            }
-
-            object @object = default;
-            //jsonString may fail to deserialize
-            try
-            {
-                @object = JsonConvert.DeserializeObject(jsonString);
-            }
-            catch
-            {
-                @object = new
-                {
-                    text = jsonString
-                };
-            }
-
-            return BsonDocument.Parse(JObject.FromObject(@object).ToString());
-        }
-
-        private static BsonValue ToPrettyBson(this object @object)
-        {
-            if (@object == null)
-            {
-                return BsonNull.Value;
-            }
-
-            return BsonDocument.Parse(JObject.FromObject(@object).ToString());
-        }
-
+        /// <summary>
+        /// Converts a given ContextCatcher object into a BsonContextCatcher object.
+        /// </summary>
+        /// <param name="contextCatcher">The source ContextCatcher object containing JSON string values.</param>
+        /// <returns>A new BsonContextCatcher object with BsonValue representations for the respective JSON string properties of the original ContextCatcher.</returns>
+        /// <remarks>
+        /// This method facilitates the transformation of JSON strings within a ContextCatcher object into BsonValue types 
+        /// that are more suitable for MongoDB storage. 
+        /// </remarks>
         public static BsonContextCatcher ToBsonType(this ContextCatcher contextCatcher)
         {
             return new BsonContextCatcher
@@ -51,6 +23,48 @@ namespace HttpContextCatcher.Extension.Bsons
                 Response = ConvertResponse(contextCatcher.Response),
                 Exception = contextCatcher.Exception
             };
+        }
+
+        private static BsonValue ToPrettyBson(this string jsonString)
+        {
+            if (string.IsNullOrEmpty(jsonString))
+            {
+                return BsonNull.Value;
+            }
+
+            // Remove leading and trailing white-spaces
+            jsonString = jsonString.Trim();
+
+            // jsonString may be a object or array
+            if (jsonString.StartsWith("{"))
+            {
+                //json is a object
+                try
+                {
+                    return BsonDocument.Parse(jsonString);
+                }
+                catch
+                {
+                    return new BsonDocument { { "text", jsonString } };
+                }
+            }
+            else if (jsonString.StartsWith("["))
+            {
+                //json is an array
+                try
+                {
+                    return BsonSerializer.Deserialize<BsonArray>(jsonString);
+                }
+                catch
+                {
+                    return new BsonDocument { { "text", jsonString } };
+                }
+            }
+            else
+            {
+                // other format
+                return new BsonDocument { { "text", jsonString } };
+            }
         }
 
         private static RequestBson ConvertRequest(RequestCatcher request)
