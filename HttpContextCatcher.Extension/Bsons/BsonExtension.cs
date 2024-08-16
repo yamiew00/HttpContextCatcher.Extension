@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
+using System;
 
 namespace HttpContextCatcher.Extension.Bsons
 {
@@ -26,58 +27,118 @@ namespace HttpContextCatcher.Extension.Bsons
             };
         }
 
-        private static BsonValue ToPrettyBson(this string jsonString)
+        private static BsonValue ToPrettyBson(this string content, string contentType)
         {
-            if (string.IsNullOrEmpty(jsonString))
+            if (string.IsNullOrEmpty(content))
             {
                 return BsonNull.Value;
             }
 
-            // Remove leading and trailing white-spaces
-            jsonString = jsonString.Trim();
-
-            // jsonString may be a object or array
-            if (jsonString.StartsWith("{"))
+            if (contentType.StartsWith("application/json"))
             {
-                //json is a object
-                try
+                // jsonString may be a object or array
+                if (content.StartsWith("{"))
                 {
-                    return BsonDocument.Parse(jsonString);
+                    // json is an object
+                    try
+                    {
+                        return BsonDocument.Parse(content);
+                    }
+                    catch
+                    {
+                        return new BsonDocument { { "text", content } };
+                    }
                 }
-                catch
+                else if (content.StartsWith("["))
                 {
-                    return new BsonDocument { { "text", jsonString } };
+                    // json is an array
+                    try
+                    {
+                        return BsonSerializer.Deserialize<BsonArray>(content);
+                    }
+                    catch
+                    {
+                        return new BsonDocument { { "text", content } };
+                    }
+                }
+                else
+                {
+                    // other format
+                    return new BsonDocument { { "text", content } };
                 }
             }
-            else if (jsonString.StartsWith("["))
+            else if (contentType.StartsWith("multipart/form-data"))
             {
-                //json is an array
+                // Assuming content is the raw body of the multipart/form-data.
                 try
                 {
-                    return BsonSerializer.Deserialize<BsonArray>(jsonString);
+                    var boundaryIndex = contentType.IndexOf("boundary=");
+                    if (boundaryIndex == -1)
+                    {
+                        return new BsonDocument { { "error", "Boundary not found in Content-Type." } };
+                    }
+
+                    var boundary = contentType.Substring(boundaryIndex + "boundary=".Length);
+
+                    // Split the content by boundary
+                    var parts = content.Split(new string[] { "--" + boundary }, StringSplitOptions.RemoveEmptyEntries);
+
+                    var bsonDocument = new BsonDocument();
+
+                    foreach (var part in parts)
+                    {
+                        // Skip empty or non-data parts
+                        if (string.IsNullOrWhiteSpace(part) || part.StartsWith("--")) continue;
+
+                        var headerEndIndex = part.IndexOf("\r\n\r\n");
+                        if (headerEndIndex == -1) continue;
+
+                        var headers = part.Substring(0, headerEndIndex).Trim();
+                        var body = part.Substring(headerEndIndex + 4).Trim(); // Skipping the two new lines
+
+                        var headerLines = headers.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+                        var name = "unknown";
+                        foreach (var line in headerLines)
+                        {
+                            if (line.StartsWith("Content-Disposition"))
+                            {
+                                var nameIndex = line.IndexOf("name=\"") + 6;
+                                var nameEndIndex = line.IndexOf("\"", nameIndex);
+                                name = line.Substring(nameIndex, nameEndIndex - nameIndex);
+                                break;
+                            }
+                        }
+
+                        bsonDocument.Add(name, body);
+                    }
+
+                    return bsonDocument;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    return new BsonDocument { { "text", jsonString } };
+                    return new BsonDocument { { "error", ex.Message }, { "content", content } };
                 }
             }
             else
             {
-                // other format
-                return new BsonDocument { { "text", jsonString } };
+                // Other Content-Type, return original content as a text field
+                return new BsonDocument { { "text", content } };
             }
         }
+
 
         private static RequestBson ConvertRequest(RequestCatcher request)
         {
             if (request == null) return default;
             return new RequestBson
             {
-                Body = request.Body.ToPrettyBson(),
+                Body = request.Body.ToPrettyBson(request.ContentType),
                 Headers = request.Headers,
                 Method = request.Method,
                 Queries = request.Queries,
                 Path = request.Path,
+                ContentType = request.ContentType
             };
         }
 
@@ -86,8 +147,9 @@ namespace HttpContextCatcher.Extension.Bsons
             if(response == null) return default;
             return new ResponseBson
             {
-                Body = response.Body.ToPrettyBson(),
-                StatusCode = response.StatusCode
+                Body = response.Body.ToPrettyBson(response.ContentType),
+                StatusCode = response.StatusCode,
+                ContentType = response.ContentType
             };
         }
     }

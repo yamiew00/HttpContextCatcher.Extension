@@ -11,5 +11,8 @@ namespace HttpContextCatcher.Extension.Bsons
 
         [BsonElement("body")]
         public BsonValue Body { get; set; }
+
+        [BsonElement("contentType")]
+        public string ContentType { get; set; }
     }
 }

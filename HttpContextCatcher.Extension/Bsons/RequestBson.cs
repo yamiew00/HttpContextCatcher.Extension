@@ -21,5 +21,8 @@ namespace HttpContextCatcher.Extension.Bsons
 
         [BsonElement("headers")]
         public Dictionary<string, string> Headers { get; set; }
+
+        [BsonElement("contentType")]
+        public string ContentType { get; set; }
     }
 }
