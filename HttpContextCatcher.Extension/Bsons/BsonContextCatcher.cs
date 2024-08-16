@@ -17,6 +17,9 @@ namespace HttpContextCatcher.Extension.Bsons
         [BsonElement("time")]
         public DateTime Time { get; set; }
 
+        [BsonElement("costSecond")]
+        public decimal CostSecond { get; set; }
+
         [BsonElement("request")]
         public RequestBson Request { get; set; }
 

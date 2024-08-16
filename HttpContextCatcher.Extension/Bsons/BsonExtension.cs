@@ -19,6 +19,7 @@ namespace HttpContextCatcher.Extension.Bsons
             return new BsonContextCatcher
             {
                 Time = contextCatcher.Time,
+                CostSecond = contextCatcher.CostSecond,
                 Request = ConvertRequest(contextCatcher.Request),
                 Response = ConvertResponse(contextCatcher.Response),
                 Exception = contextCatcher.Exception
@@ -86,7 +87,6 @@ namespace HttpContextCatcher.Extension.Bsons
             return new ResponseBson
             {
                 Body = response.Body.ToPrettyBson(),
-                ResSecond = response.ResSecond,
                 StatusCode = response.StatusCode
             };
         }

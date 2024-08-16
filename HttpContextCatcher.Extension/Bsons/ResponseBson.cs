@@ -11,9 +11,5 @@ namespace HttpContextCatcher.Extension.Bsons
 
         [BsonElement("body")]
         public BsonValue Body { get; set; }
-
-        [BsonRepresentation(BsonType.Decimal128)]
-        [BsonElement("resSecond")]
-        public decimal ResSecond { get; set; }
     }
 }
