@@ -12,25 +12,24 @@ namespace HttpContextCatcher.Extension.Bsons
         [BsonElement("_id")]
         [BsonIgnoreIfDefault]
         [JsonIgnore]
-        public ObjectId _id { get; set; }
+        public ObjectId _id { get; internal set; }
 
         [BsonElement("time")]
-        public DateTime Time { get; set; }
+        public DateTime Time { get; internal set; }
 
         [BsonElement("costSecond")]
-        public decimal CostSecond { get; set; }
+        public decimal CostSecond { get; internal set; }
+
+        [BsonElement("statusCode")]
+        public int StatusCode { get; internal set; }
 
         [BsonElement("request")]
-        public RequestBson Request { get; set; }
+        public RequestBson Request { get; internal set; }
 
         [BsonElement("response")]
-        public ResponseBson Response { get; set; }
+        public ResponseBson Response { get; internal set; }
 
         [BsonElement("exception")]
-        public ExceptionCatcher Exception { get; set; }
-
-        [BsonElement("item")]
-        [BsonIgnoreIfDefault]
-        public ItemBson Item { get; set; }
+        public ExceptionCatcher Exception { get; internal set; }
     }
 }
