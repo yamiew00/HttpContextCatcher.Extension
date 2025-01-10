@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using System.Text.Json.Serialization;
 using System;
+using Microsoft.AspNetCore.Http;
 
 namespace HttpContextCatcher.Extension.Bsons
 {
@@ -31,5 +32,7 @@ namespace HttpContextCatcher.Extension.Bsons
 
         [BsonElement("exception")]
         public ExceptionCatcher Exception { get; internal set; }
+
+        public HttpContext HttpContext { get; internal set; }
     }
 }

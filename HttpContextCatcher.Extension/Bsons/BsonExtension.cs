@@ -24,7 +24,8 @@ namespace HttpContextCatcher.Extension.Bsons
                 Request = ConvertRequest(contextCatcher.Request),
                 Response = ConvertResponse(contextCatcher.Response),
                 StatusCode = contextCatcher.StatusCode,
-                Exception = contextCatcher.Exception
+                Exception = contextCatcher.Exception,
+                HttpContext = contextCatcher.HttpContext
             };
         }
 
